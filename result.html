@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>✨ Your AI Look ✨</title>
+<style>
+body{
+    margin:0;
+    font-family: 'Segoe UI', sans-serif;
+    text-align:center;
+    color:white;
+    background: linear-gradient(-45deg,#ff416c,#ff4b2b,#ff9a9e,#f093fb,#43e97b,#38f9d7);
+    background-size: 400% 400%;
+    animation: gradientBG 12s ease infinite;
+}
+
+@keyframes gradientBG{
+    0%{background-position:0% 50%;}
+    50%{background-position:100% 50%;}
+    100%{background-position:0% 50%;}
+}
+
+.container{
+    margin-top:50px;
+}
+
+img{
+    width:350px;
+    border-radius:20px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.4);
+    animation: zoomIn 1.5s ease;
+}
+
+@keyframes zoomIn{
+    from{opacity:0; transform:scale(0.7);}
+    to{opacity:1; transform:scale(1);}
+}
+
+button{
+    padding:12px 30px;
+    border:none;
+    border-radius:30px;
+    background:yellow;
+    font-weight:bold;
+    cursor:pointer;
+    margin-top:20px;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<h1>🔥 Your AI Styled Transformation 👗✨</h1>
+
+<img src="{{ url_for('static', filename='uploads/' + user_image) }}">
+
+<br>
+
+<form action="/dashboard">
+    <button>Try Another Look 💃🔥</button>
+</form>
+
+</div>
+</body>
+</html>

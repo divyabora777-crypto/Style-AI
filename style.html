@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>📸 Upload Photo</title>
+<style>
+body{
+    text-align:center;
+    font-family:sans-serif;
+    color:white;
+    background: linear-gradient(-45deg,#ff416c,#ff4b2b,#f093fb,#43e97b);
+    background-size:400% 400%;
+    animation:gradient 10s ease infinite;
+}
+
+@keyframes gradient{
+    0%{background-position:0% 50%}
+    50%{background-position:100% 50%}
+    100%{background-position:0% 50%}
+}
+
+.box{
+    margin-top:120px;
+}
+input{
+    padding:10px;
+    border-radius:10px;
+}
+button{
+    padding:10px 25px;
+    border-radius:20px;
+    background:yellow;
+    border:none;
+    font-weight:bold;
+}
+</style>
+</head>
+<body>
+
+<div class="box">
+<h2>📸 Upload Your Photo & Let AI Work Magic ✨💄💇‍♀️</h2>
+
+<form method="POST" enctype="multipart/form-data">
+<input type="file" name="photo" required><br><br>
+<button>Apply Full AI Makeover 🔥</button>
+</form>
+
+<br>
+<a href="/dashboard" style="color:white;">⬅ Back</a>
+</div>
+
+</body>
+</html>
