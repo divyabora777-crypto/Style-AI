@@ -1,19 +1,17 @@
 import os
-import base64
 from flask import Flask, render_template, request, redirect, url_for, session
 from werkzeug.utils import secure_filename
-from openai import OpenAI
+from PIL import Image
+from rembg import remove
 
 app = Flask(__name__)
-app.secret_key = "styleai_secret_key"
+app.secret_key = "styleai_secret"
 
 UPLOAD_FOLDER = "static/uploads"
+DRESS_FOLDER = "static/dresses"
+
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# OpenAI client (uses environment variable OPENAI_API_KEY)
-client = OpenAI()
-
-# Simple in-memory user storage
 users = {}
 
 # ---------------- LOGIN ----------------
@@ -36,81 +34,59 @@ def login():
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
-        username = request.form["username"]
-        password = request.form["password"]
-
-        users[username] = password
+        users[request.form["username"]] = request.form["password"]
         return redirect(url_for("login"))
 
     return render_template("register.html")
 
 
 # ---------------- DASHBOARD ----------------
-@app.route("/dashboard", methods=["GET", "POST"])
+@app.route("/dashboard")
 def dashboard():
     if "user" not in session:
         return redirect(url_for("login"))
-
-    if request.method == "POST":
-        session["gender"] = request.form["gender"]
-        session["style"] = request.form["style"]
-        return redirect(url_for("style_page"))
-
     return render_template("dashboard.html")
 
 
 # ---------------- STYLE PAGE ----------------
-@app.route("/style", methods=["GET", "POST"])
-def style_page():
-    if "user" not in session:
-        return redirect(url_for("login"))
+@app.route("/style", methods=["POST"])
+def style():
+    file = request.files["photo"]
+    dress_name = request.form["dress"]
 
-    if request.method == "POST":
-        file = request.files["photo"]
+    filename = secure_filename(file.filename)
+    filepath = os.path.join(UPLOAD_FOLDER, filename)
+    file.save(filepath)
 
-        if not file:
-            return "No file uploaded"
+    # Remove background
+    input_image = Image.open(filepath).convert("RGBA")
+    output_image = remove(input_image)
 
-        filename = secure_filename(file.filename)
-        filepath = os.path.join(UPLOAD_FOLDER, filename)
-        file.save(filepath)
+    # Load selected dress
+    dress_path = os.path.join(DRESS_FOLDER, dress_name)
+    dress = Image.open(dress_path).convert("RGBA")
 
-        gender = session.get("gender")
-        style = session.get("style")
+    # Resize dress to fit body width
+    body_width = output_image.width
+    dress_ratio = dress.height / dress.width
+    new_width = int(body_width * 0.8)
+    new_height = int(new_width * dress_ratio)
+    dress = dress.resize((new_width, new_height))
 
-        prompt = f"""
-        Transform this person into a trendy {style} outfit for a {gender}.
-        Apply fashionable clothes.
-        Add suitable hairstyle.
-        Add soft natural makeup.
-        Keep facial identity realistic.
-        """
+    # Position dress
+    position = (
+        int((output_image.width - new_width) / 2),
+        int(output_image.height * 0.35)
+    )
 
-        # Read uploaded image
-        with open(filepath, "rb") as image_file:
-            image_bytes = image_file.read()
+    # Overlay
+    output_image.paste(dress, position, dress)
 
-        # IMPORTANT: Use images.edit (NOT generate)
-        response = client.images.edit(
-            model="gpt-image-1",
-            image=image_bytes,
-            prompt=prompt
-        )
+    result_path = os.path.join(UPLOAD_FOLDER, "result_" + filename)
+    output_image.save(result_path)
 
-        # Decode generated image
-        image_base64 = response.data[0].b64_json
-        image_bytes = base64.b64decode(image_base64)
-
-        styled_filename = "styled_" + filename
-        styled_path = os.path.join(UPLOAD_FOLDER, styled_filename)
-
-        with open(styled_path, "wb") as f:
-            f.write(image_bytes)
-
-        return render_template("result.html",
-                               user_image=styled_filename)
-
-    return render_template("style.html")
+    return render_template("result.html",
+                           result_image="uploads/result_" + filename)
 
 
 # ---------------- LOGOUT ----------------
